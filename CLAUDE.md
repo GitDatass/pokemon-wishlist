@@ -27,20 +27,55 @@ kicks in — the card just silently shows the generic Pokémon-logo card back
 instead of erroring out visibly. Anyone reporting "some cards show a plain
 Pokémon card back instead of the real art" is hitting this.
 
-**How to debug it:** don't just check for broken images visually — verify
-the actual set ID is correct. `curl` won't help either, since a 404 status
-still returns image bytes; instead compare against the known-correct ID
-(cross-check https://tcgplayer.com or https://pokemontcg.io/sets for the
-real set code) or just prefer moving the set into `SET_TCGDEX` (TCGdex does
-404 properly, so this class of bug can't recur there).
+**How to debug it — `curl -I` IS the right tool** (correcting an earlier
+note here): the browser renders the card-back regardless of status, but
+`curl -sI <url>` shows the real **HTTP status code** — a 404 means the
+set/number combo is invalid. The efficient sweep is: generate every card's
+image URL exactly as the page does (replicate the inline `_SD` builder over
+`SET_TCGDEX`/`SET_TCGID`, and call the `sellImg` logic for `_SELL_DATA`),
+then `curl -sI` each and flag non-200s. One representative card per set
+catches the whole class, since failures are almost always per-set. Cross-check
+real IDs at https://pokemontcg.io/sets, https://api.tcgdex.net/v2/en/sets
+(and `/ja/sets` for Japanese), or https://tcgplayer.com. Prefer moving a set
+into `SET_TCGDEX` when TCGdex has it — it 404s properly so the trap can't recur.
 
-**Fixed so far:** `Destined Rivals` was mapped to `sv9` (wrong — that's a
-different, unrelated real set) instead of `sv10`. Fixed in `SET_TCGID` and
-also added to `SET_TCGDEX` so it no longer depends on the trap-prone CDN.
+**Two failure sub-types beyond a plain 404:**
 
-If a similar report comes in for another set, check that set's entry in
-`SET_TCGID` against its real pokemontcg.io / TCGdex set code before assuming
-it's a code bug — it's usually just a wrong ID.
+- **Silent wrong-set (returns 200, wrong art).** A valid-but-wrong id maps to
+  a *different* real set, so it renders fine but shows the wrong cards — a
+  status check alone won't catch it. Verify the id actually belongs to the
+  named set. Examples fixed: `Base Set 2` → `base2` was showing **Jungle**
+  (correct is `base4`); `Crown Zenith: Galarian Gallery` → `swsh12pt5` showed
+  base Crown Zenith (correct is `swsh12pt5gg`).
+- **WOTC ids differ between CDNs.** pokemontcg.io numbers the old sets
+  `base2`=Jungle, `base3`=Fossil, `base4`=Base Set 2, `base5`=Team Rocket —
+  NOT the TCGdex-style names (`jungle`/`fossil`/`rocket`), which 404.
+
+**Japanese-only sets** (Selling tab, `lang:'JP'`) use TCGdex's JP path:
+`https://assets.tcgdex.net/ja/{serie}/{set}/{localId}/high.webp`, where
+`serie` is a short code (`S`, `SV`, `M`) and `set`/`serie` come from
+`api.tcgdex.net/v2/ja/sets` — match by card count + Japanese name. Handled in
+`sellImg`'s `jpMap`. Note very new sets (e.g. Mega Brave `M1L`, MEGA Dream ex
+`M2a`) have card records but no images yet — mapping is correct; art appears
+when TCGdex uploads it.
+
+**Fixed so far:**
+- `Destined Rivals` `sv9`→`sv10` (unrelated real set); added to `SET_TCGDEX`.
+- `Phantasmal Flames` was in neither map (silent card-back) → `SET_TCGDEX`
+  `me02`. Plus a full sweep fixing ~19 set mappings across both tabs (WOTC
+  base ids, trainer galleries, promos, base sets, JP sets — see the
+  "Fix card images" commit).
+
+**Known data issues (NOT code bugs — don't chase these as mapping bugs):**
+- `Celebrations: Classic Collection` stores *original-set* numbers (e.g.
+  `4/102` = Base Charizard); `cel25c` images 404 on the CDN regardless. Needs
+  a per-card mapping.
+- `Sun & Moon Base Set`: 18 cards have number `"N/A"` in the data.
+- `McDonald's Promos 2023`: not hosted on any CDN.
+
+If a similar report comes in, check that set's entry against its real
+pokemontcg.io / TCGdex code (and watch for the silent-wrong-set sub-type)
+before assuming it's a code bug — it's usually just a wrong ID.
 
 ## Pricing methodology
 
