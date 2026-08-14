@@ -1,6 +1,6 @@
 ---
 name: refresh-prices
-description: Refresh Pokémon card prices in index.html from eBay Australia sold listings. Use when the user wants to update, re-price, or refresh card prices — for a single card, a whole set, or the entire wishlist/selling catalogue. Drives the user's logged-in Chrome to read eBay AU sold comps, filters to raw/ungraded English (or JP) cards, averages the last 3 sold, and writes back into _EBAY_PRICES / _SELL_DATA.
+description: Refresh Pokémon card prices in index.html from eBay Australia sold listings. Use when the user wants to update, re-price, or refresh card prices — for a single card, a whole set, or the entire wishlist/selling catalogue. Drives the user's logged-in Chrome to read eBay AU sold comps, filters to raw/ungraded English cards only, averages the last 3 sold, and writes back into _EBAY_PRICES / _SELL_DATA.
 ---
 
 # Refresh prices
@@ -86,7 +86,8 @@ If no target is given, ask which.
 
 - Never enter the user's eBay credentials. If not signed in, ask them to.
 - Never write a price from a page you couldn't parse cleanly.
-- Never include graded (PSA/BGS/CGC/TAG/…) or non-English (unless `lang:JP`).
+- Never include graded (PSA/BGS/CGC/TAG/…) or non-English comps. English
+  only — no Japanese/other-language sales, ever.
 - Never do a global find/replace on a bare number key — collisions across
   sets will corrupt other cards' prices.
 

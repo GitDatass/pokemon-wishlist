@@ -125,13 +125,10 @@ def passes_filters(comp: dict, name: str, number: str, lang: str) -> bool:
     title = comp["title"]
     if RE_GRADED.search(title) or RE_LOT.search(title) or RE_FAKE.search(title):
         return False
-    is_jp_card = (lang or "").upper() == "JP"
-    if is_jp_card:
-        if not RE_JP.search(title):
-            return False
-    else:
-        if RE_JP.search(title) or RE_OTHER_LANG.search(title):
-            return False
+    # English only, always -- never accept Japanese or other non-English comps
+    # (spec sec 1 & 3). Non-English *cards* are skipped upstream in main().
+    if RE_JP.search(title) or RE_OTHER_LANG.search(title):
+        return False
     # Right card: title must mention the collector number (full or bare) and
     # the distinctive name tokens.
     bare = number.split("/")[0].lstrip("0") or number.split("/")[0]

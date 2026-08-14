@@ -29,9 +29,13 @@ Insights API key or a residential-proxy fetch is wired in.
 ## 1. Basis
 
 A card's price is: **eBay Australia, average of the last 3 sold listings,
-raw/ungraded English cards only** — unless the card's `lang` field says
-otherwise (e.g. `JP` → require Japanese comps instead of English).
+raw/ungraded English cards only**.
 
+- **English only — no exceptions.** Never pull Japanese or any other
+  non-English sold prices, and never price a non-English card. If a card is
+  somehow tagged non-English (a `lang` other than English/unset), **skip it
+  and flag** rather than pricing it. (The catalogue is currently all English;
+  this is a guard, not a live case.)
 - Sold/completed listings **only**. Never use active/asking prices — they
   run well above actual sold prices.
 - Prices are AUD.
@@ -66,7 +70,7 @@ present):
 | Graded | `\b(psa\|bgs\|cgc\|ace\|sgc\|beckett\|graded\|gem ?mt\|gem mint)\b` or a grade token like `psa\s*10`, `cgc\s*9\.5` |
 | Lots / bundles | `\b(lot\|lots\|bundle\|playset\|job ?lot\|bulk\|collection\|x\s?\d+\|\d+\s?cards)\b` |
 | Fakes / customs | `\b(proxy\|fake\|custom\|orica\|art ?card\|not real\|replica)\b` |
-| Wrong language | if card `lang` is English/unset → REJECT `\b(japanese\|jpn\|jp\|korean\|chinese)\b`; if card `lang` is `JP` → REJECT comps that are NOT Japanese |
+| Non-English | REJECT `\b(japanese\|jpn\|jp\|korean\|chinese\|french\|german\|italian\|spanish)\b` — English comps only, always |
 | Wrong card | REJECT unless title contains the collector **number** (`233/182` or bare `233`) AND the card's name tokens |
 
 ## 3a. Best-Offer-accepted adjustment
