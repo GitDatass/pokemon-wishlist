@@ -224,7 +224,32 @@ function doSearch(){
   updateStats();
 }
 
+function recount(){
+  var totalMissing=0,setCount=0;
+  document.querySelectorAll('.sb').forEach(function(sb){
+    var sn=sb.dataset.set;
+    if(!sn||!_SD[sn])return;
+    var n=_SD[sn].length;
+    var el=sb.querySelector('.scnt');
+    if(el)el.textContent=n+' missing';
+    totalMissing+=n;setCount++;
+  });
+  document.querySelectorAll('.pnl').forEach(function(pnl){
+    var sum=0,has=false;
+    pnl.querySelectorAll('.sb').forEach(function(sb){
+      var sn=sb.dataset.set;
+      if(sn&&_SD[sn]){sum+=_SD[sn].length;has=true;}
+    });
+    if(!has)return;
+    var tab=document.getElementById('tb'+pnl.id.replace(/^pn/,''));
+    if(tab){var c=tab.querySelector('.cnt');if(c)c.textContent=sum;}
+  });
+  var hp=document.querySelector('header p');
+  if(hp)hp.textContent=totalMissing.toLocaleString()+' missing cards across '+setCount+" sets · Tick what you're getting for him!";
+}
+
 window.addEventListener('DOMContentLoaded',function(){
+  recount();
   var tabs=document.querySelectorAll('.tab');
   if(tabs.length)tabs[0].click();
 });
