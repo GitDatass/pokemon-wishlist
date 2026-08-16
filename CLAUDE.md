@@ -79,11 +79,13 @@ before assuming it's a code bug — it's usually just a wrong ID.
 
 ## Pricing methodology
 
-All prices are meant to be: **eBay Australia, average of the last 3 sold
+All prices are meant to be: **eBay Australia, median of the last 5 sold
 listings, raw/ungraded English cards only**. English only — never price a
 Japanese/other-language card and never use non-English sold comps. Do not use
 current/asking listing prices — those run well above actual sold prices. Do
-not include graded (PSA/BGS/CGC) sales in the average.
+not include graded (PSA/BGS/CGC) sales in the median. (Median, not mean, since
+2026-08-17 — one inflated sale shouldn't move the number; ≥5 comps feed it,
+fewer than 3 flags low confidence.)
 
 Prices live in two places depending on which tab a card appears in:
 
@@ -110,9 +112,12 @@ step is a script (run manually or on a schedule) that:
 1. Iterates every card in `_EBAY_PRICES` / `_SELL_DATA`.
 2. Queries eBay's sold-listings for `<card name> <set> <number> raw
    ungraded` filtered to Australia.
-3. Averages the last 3 sold prices (skip graded, skip all non-English —
-   English cards and comps only).
+3. Takes the median of the last 5 sold prices (skip graded, skip all
+   non-English — English cards and comps only).
 4. Writes the result back into the appropriate data structure.
 
 When asked to "keep this updated" or build a pricing skill, this is the spec
-to build against — average of last 3 eBay AU sold, raw/ungraded only.
+to build against — median of last 5 eBay AU sold, raw/ungraded only. This is
+implemented by the `refresh-prices` skill (writer) and `ebay-au-card-value`
+skill (read-only valuation); both share the same channel, filters, and
+median-of-5 method.

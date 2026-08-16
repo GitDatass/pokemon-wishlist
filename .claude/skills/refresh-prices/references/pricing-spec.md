@@ -28,7 +28,7 @@ Insights API key or a residential-proxy fetch is wired in.
 
 ## 1. Basis
 
-A card's price is: **eBay Australia, average of the last 3 sold listings,
+A card's price is: **eBay Australia, median of the last 5 sold listings,
 raw/ungraded English cards only**.
 
 - **English only — no exceptions.** Never pull Japanese or any other
@@ -39,7 +39,7 @@ raw/ungraded English cards only**.
 - Sold/completed listings **only**. Never use active/asking prices — they
   run well above actual sold prices.
 - Prices are AUD.
-- Round the average to 2 decimal places.
+- Round the median to 2 decimal places.
 
 ## 2. Query construction
 
@@ -81,21 +81,23 @@ For a listing marked **"Best Offer accepted"**, eBay displays the seller's
 
 Rule: multiply a "Best Offer accepted" comp's displayed price by
 `BO_ACCEPTED_FACTOR` (default **0.92**, i.e. an 8% haircut) before it enters
-the average. Record both the displayed and adjusted price in the audit.
+the median. Record both the displayed and adjusted price in the audit.
 
 - "Buy It Now", auction winning bids, and "or Best Offer" comps that sold at
   the listed price are **firm** — use them as-is.
 - `0.92` is a starting heuristic, not measured. Calibrate it against a batch
   of cards where the real accepted price is known, and revisit.
-- This affects the average only, never the filtering.
+- This affects the median only, never the filtering.
 
-## 4. Average
+## 4. Median
 
-1. From the surviving comps, take the **3 most recent** (list is already
+1. From the surviving comps, take the **5 most recent** (list is already
    sorted most-recent-first by `_sop=13`).
-2. Average them; round to 2 dp.
-3. **Fewer than 3 survivors** → average what remains and mark the result
-   `low_confidence` (see §6).
+2. Take their **median**; round to 2 dp. (Median, not mean — one inflated
+   sale shouldn't move the number.)
+3. **Fewer than 3 survivors** → take the median of what remains and mark the
+   result `low_confidence` (see §6). The confidence floor stays at 3 comps
+   even though up to 5 feed the median.
 
 ## 5. Write-back targets
 

@@ -36,6 +36,7 @@ import argparse
 import datetime as _dt
 import json
 import re
+import statistics
 import sys
 import time
 import urllib.parse
@@ -50,6 +51,7 @@ AUDIT_LOG = Path(__file__).resolve().parent / "price-audit.log.jsonl"
 
 # --- policy (spec sec 6) ---------------------------------------------------
 OUTLIER_SWING = 0.50        # >50% change vs stored price -> hold for confirmation
+N_COMPS = 5                 # most-recent comps that feed the median (spec sec 4)
 MIN_COMPS = 3               # fewer qualifying comps -> low confidence -> hold
 FETCH_DELAY_S = 2.0         # be polite between requests
 BO_ACCEPTED_FACTOR = 0.92   # spec sec 3a: haircut for "Best Offer accepted" comps.
@@ -141,18 +143,18 @@ def passes_filters(comp: dict, name: str, number: str, lang: str) -> bool:
 
 
 def price_for(name: str, number: str, lang: str) -> tuple[float | None, list[dict], str]:
-    """Return (avg_price_or_None, comps_used, url) per spec sec 2-4."""
+    """Return (median_price_or_None, comps_used, url) per spec sec 2-4."""
     url = build_url(name, number)
     try:
         html = fetch(url)
     except Exception as exc:  # noqa: BLE001 - flag & skip on any fetch error
         return None, [{"error": str(exc)}], url
     comps = [c for c in parse_sold_html(html) if passes_filters(c, name, number, lang)]
-    used = comps[:MIN_COMPS]
+    used = comps[:N_COMPS]
     if not used:
         return None, [], url
-    avg = round(sum(c["price"] for c in used) / len(used), 2)
-    return avg, used, url
+    med = round(statistics.median(c["price"] for c in used), 2)
+    return med, used, url
 
 
 # --- index.html parsing / write-back (spec sec 5) --------------------------

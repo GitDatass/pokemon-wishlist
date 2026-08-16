@@ -1,6 +1,6 @@
 ---
 name: refresh-prices
-description: Refresh Pokémon card prices in index.html from eBay Australia sold listings. Use when the user wants to update, re-price, or refresh card prices — for a single card, a whole set, or the entire wishlist/selling catalogue. Drives the user's logged-in Chrome to read eBay AU sold comps, filters to raw/ungraded English cards only, averages the last 3 sold, and writes back into _EBAY_PRICES / _SELL_DATA.
+description: Refresh Pokémon card prices in index.html from eBay Australia sold listings. Use when the user wants to update, re-price, or refresh card prices — for a single card, a whole set, or the entire wishlist/selling catalogue. Drives the user's logged-in Chrome to read eBay AU sold comps, filters to raw/ungraded English cards only, takes the median of the last 5 sold, and writes back into _EBAY_PRICES / _SELL_DATA.
 ---
 
 # Refresh prices
@@ -63,8 +63,8 @@ If no target is given, ask which.
       wrong card.
    e. **Sort by actual sold date** (a sponsored listing is often injected at
       the top out of order — trust the `Sold <date>`, not page position).
-   f. Take the 3 most recent survivors, apply the Best-Offer-accepted
-      adjustment (spec §3a), average, round (spec §4).
+   f. Take the 5 most recent survivors, apply the Best-Offer-accepted
+      adjustment (spec §3a), take the median, round (spec §4).
 5. **Decide per card (spec §6):**
    - Within 50% of the old price AND ≥3 comps → **apply**.
    - >50% swing OR <3 comps → **hold for confirmation** (show why).
