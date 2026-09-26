@@ -66,6 +66,14 @@ when TCGdex uploads it.
   base ids, trainer galleries, promos, base sets, JP sets — see the
   "Fix card images" commit).
 
+**30th Celebration (2026):** main set uses TCGdex `30th` (`p:'me'`); the
+letter-numbered RGB Mews (`B/RGB` etc.) and all of `30th Celebration: Classic
+Collection` (stores original-set numbers, no TCGdex art) map via `_SD_OVR` to
+Scrydex `images.scrydex.com/pokemon/me55-<X>` / `me55c-<id>`. **Scrydex has
+the same trap**: a bad id returns HTTP 200 with a 186,316-byte card-back, so
+check response size too. `Trick or Trade BOOster Bundle 2023` cards carry
+their original-set numbers → `_SD_OVR` to the original card's art.
+
 **Known data issues (NOT code bugs — don't chase these as mapping bugs):**
 - `Celebrations: Classic Collection` stores *original-set* numbers (e.g.
   `4/102` = Base Charizard); `cel25c` images 404 on the CDN regardless. Needs
