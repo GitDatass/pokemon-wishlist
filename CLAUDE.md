@@ -74,12 +74,27 @@ the same trap**: a bad id returns HTTP 200 with a 186,316-byte card-back, so
 check response size too. `Trick or Trade BOOster Bundle 2023` cards carry
 their original-set numbers → `_SD_OVR` to the original card's art.
 
+**Fallback image sources (user-approved, 2026-09-26).** When TCGdex (and
+pokemontcg.io) lack a set, scrape per-card URLs into `_SD_OVR` — IDs aren't
+derivable, so this is done at edit time, not runtime:
+- **PokéCottage** (`pokecottage.com/card-list-library?filter=chinese`) — Chinese
+  sets. Gem Pack Vol. 1–6 pages at `/chinese-sets/gem-pack-vol-N-card-list/`;
+  images on `images.squarespace-cdn.com` / `pokecottagecdn.com`. Vol 1/2 filenames
+  carry `SS+VV`, Vol 6 alt text carries `SS VV/07`, Vol 3/5 are sequential (7 per
+  slot), Vol 4 mixes `N%3AK` and a running index that **drifts** — derive slot
+  from page order + rarity pattern (C,C,U,U,R,RR,top).
+- **Pokellector** (`pokellector.com/<Set>-Expansion/`, images on
+  `den-cards.pokellector.com/.../<Name>.<CODE>.<n>.<id>.thumb.png`) — secondary
+  fallback for English promos (used for McDonald's Promos 2023).
+Sets with no source at all get an empty `src` (placeholder), never a
+`pokemontcg.io/undefined/…` URL.
+
 **Known data issues (NOT code bugs — don't chase these as mapping bugs):**
 - `Celebrations: Classic Collection` stores *original-set* numbers (e.g.
   `4/102` = Base Charizard); `cel25c` images 404 on the CDN regardless. Needs
   a per-card mapping.
 - `Sun & Moon Base Set`: 18 cards have number `"N/A"` in the data.
-- `McDonald's Promos 2023`: not hosted on any CDN.
+- `McDonald's Promos 2023`: not on TCGdex/pokemontcg.io — images via Pokellector overrides.
 
 If a similar report comes in, check that set's entry against its real
 pokemontcg.io / TCGdex code (and watch for the silent-wrong-set sub-type)
