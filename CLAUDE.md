@@ -144,3 +144,30 @@ to build against — median of last 5 eBay AU sold, raw/ungraded only. This is
 implemented by the `refresh-prices` skill (writer) and `ebay-au-card-value`
 skill (read-only valuation); both share the same channel, filters, and
 median-of-5 method.
+
+## Connected Art tab
+
+Catalogue of every multi-card connected/combined artwork (Southern Islands
+panoramas, LEGEND pairs, V-UNION, combined-illustration promos, connecting
+IR/SIR/AR/TG lines…). **Source of truth is `connected-art.json`** (group/card
+schema: group_id, group_name, set_name, set_code, release_year, artist,
+group_size, group_type, layout_type, language, description,
+connection_description, display_order, verification_status, source_references,
+cards[{position, card_name, card_number, set_name, rarity, artist, language,
+image_url, thumbnail_url, connected_to, notes}]). After editing it run
+`perl scripts/build-connected-art.pl` — it normalises ids/sizes/`connected_to`
+and rewrites the single `var _CA=[...]` line in index.html. (Pass research
+files as args to rebuild the JSON from scratch.)
+
+- The combined artwork is **reconstructed live** by laying card images out in
+  `display_order` (flat array = one row; nested = rows; vertical/legend flat
+  arrays become one card per row). There are no hosted combined-artwork images.
+- **Ownership is derived, not stored:** a card whose `set_name` is a `_SD` key
+  is *missing* if `_SD` lists that number (compared on the part before `/`,
+  leading zeros stripped) and *owned* otherwise; sets not in `_SD` default to
+  missing. Manual ticks live in localStorage `ca:<group_id>:<position>`. So
+  card `set_name`s must match `_SD` keys exactly for auto-tracking.
+- Value-to-complete uses `_EBAY_PRICES` (then English `_SELL_DATA`) prices.
+- `verification_status: "needs_review"` groups show in the "Needs Verification"
+  view with `review_reason`. Primary reference: Bulbapedia "Combined
+  illustration (TCG)". Exclude same-artist/same-theme/narrative-only pairs.
