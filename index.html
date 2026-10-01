@@ -1071,7 +1071,7 @@ window.openPdexModal=function(dex,name,types,cards){
   });
   var rows=sorted.map(function(c){
     var si=_PD.S[c[0]];var sName=Array.isArray(si)?si[0]:String(si||c[0]);var sDate=Array.isArray(si)?si[1]:'';
-    var rar=_PD.R[c[3]]||c[3];var fin=_PD.F[c[4]]||c[4];
+    var rar=R[c[3]]||c[3];var fin=F[c[4]]||c[4];
     return '<tr><td>'+sName+'</td><td>'+(sDate||'Unknown')+'</td><td>'+c[1]+'</td><td>'+c[2]+'</td><td>'+rar+'</td><td>'+fin+'</td></tr>';
   }).join('');
   document.getElementById('pdex-mtbody').innerHTML=rows||'<tr><td colspan="6" style="color:#555;text-align:center">No cards in tracked sets</td></tr>';
