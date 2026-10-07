@@ -5,7 +5,7 @@
 # connected-art.json. Without: re-reads connected-art.json. Either way it
 # normalises every group (ids, sizes, connected_to neighbours) and rewrites the
 # single `var _CA=...;` line in index.html. Collector data (owned/missing) is
-# computed live in the page from _SD, so it is not stored here.
+# ticked by the user in the page (not linked to _SD), so it is not stored here.
 use strict; use warnings;
 use JSON::PP;
 use FindBin;
@@ -49,8 +49,12 @@ for my $g (@groups) {
         $c->{position} += 0;
     }
 
-    (my $id = lc "$g->{group_name} $g->{release_year}") =~ s/[^a-z0-9]+/-/g;
-    $id =~ s/^-|-$//g;
+    # Keep an existing id stable (owned ticks are keyed on it); only derive one for new groups.
+    my $id = $g->{group_id};
+    unless (defined $id && length $id) {
+        ($id = lc "$g->{group_name} $g->{release_year}") =~ s/[^a-z0-9]+/-/g;
+        $id =~ s/^-|-$//g;
+    }
     $id .= '-' . ++$seen{$id} if $seen{$id}++;
     $g->{group_id} = $id;
     $g->{cards} = \@cards;

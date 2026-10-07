@@ -162,11 +162,15 @@ files as args to rebuild the JSON from scratch.)
 - The combined artwork is **reconstructed live** by laying card images out in
   `display_order` (flat array = one row; nested = rows; vertical/legend flat
   arrays become one card per row). There are no hosted combined-artwork images.
-- **Ownership is derived, not stored:** a card whose `set_name` is a `_SD` key
-  is *missing* if `_SD` lists that number (compared on the part before `/`,
-  leading zeros stripped) and *owned* otherwise; sets not in `_SD` default to
-  missing. Manual ticks live in localStorage `ca:<group_id>:<position>`. So
-  card `set_name`s must match `_SD` keys exactly for auto-tracking.
+- **Ownership is manual only — NOT linked to the wishlist sets (`_SD`).** A card
+  is owned only if ticked (localStorage `ca:<group_id>:<position>` = `1`); each
+  tile has a Mark owned / unmark button for the whole group. The builder keeps
+  existing group ids stable so ticks survive rebuilds. Don't tie Connected Art
+  to set or price edits.
+- Filters include Owned / Still to get; sort by newest/oldest year or
+  highest/lowest rarity (a group ranks by its rarest card — `RANK` in index.html).
+- Missing images: Scrydex (`images.scrydex.com/pokemon/<id>/large|small`, e.g. `mep-52`,
+  `m6_ja-53`, `tk8b-30`) when TCGdex lacks the card — check size isn't the card-back.
 - Value-to-complete uses `_EBAY_PRICES` (then English `_SELL_DATA`) prices.
 - `verification_status: "needs_review"` groups show in the "Needs Verification"
   view with `review_reason`. Primary reference: Bulbapedia "Combined
