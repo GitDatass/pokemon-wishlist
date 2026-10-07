@@ -1321,6 +1321,8 @@ css.textContent=''
 +'.ca-map{font-family:Consolas,monospace;font-size:.78rem;color:#9fe;white-space:pre;overflow-x:auto;line-height:1.5}'
 +'.ca-src a{color:#5ab3f5;font-size:.74rem;word-break:break-all}'
 +'.ca-btn{padding:6px 12px;border-radius:8px;border:1px solid #2a2a3a;background:#0f0f13;color:#bbb;font-size:.75rem;cursor:pointer}.ca-btn:hover{border-color:#00bcd4;color:#fff}'
++'.ca-bar2{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-2px 0 10px}.ca-lbl{font-size:.68rem;color:#666;text-transform:uppercase;letter-spacing:.05em;width:40px}'
++'.ca-chip{padding:5px 11px;border-radius:16px;border:1px solid #252535;background:#0f0f13;color:#999;font-size:.74rem;cursor:pointer}.ca-chip:hover{border-color:#00bcd4;color:#fff}.ca-chip.on{background:#1b3a40;border-color:#00bcd4;color:#bff4fb}'
 +'.ca-own{margin-top:8px;align-self:flex-start;padding:4px 10px;border-radius:14px;border:1px solid #2a2a3a;background:#0f0f13;color:#aaa;font-size:.7rem;cursor:pointer}.ca-own:hover{border-color:#00bcd4;color:#fff}.ca-own.on{border-color:#2a5c2a;color:#7ddc7d}'
 +'@media(max-width:600px){.ca-filters input{width:100%}.ca-grid{grid-template-columns:1fr}}';
 document.head.appendChild(css);
@@ -1329,7 +1331,7 @@ var m=document.createElement('div');m.id='ca-modal';
 m.innerHTML='<div id="ca-ov" onclick="caClose()"></div><div id="ca-box"><button id="ca-x" onclick="caClose()">×</button><div id="ca-body"></div></div>';
 document.body.appendChild(m);
 
-var _view='gallery',_open=null;
+var _view='gallery',_open=null,_sort='',_show='';
 var _cc=document.getElementById('caCnt');if(_cc)_cc.textContent=_CA.length;
 function E(s){return escH(s==null?'':s);}
 function norm(n){n=String(n||'').split('/')[0].toUpperCase().replace(/\s+/g,'');return n.replace(/\d+/g,function(d){return String(parseInt(d,10));});}
@@ -1359,9 +1361,10 @@ var RANK={'Special Illustration Rare':12,'Secret Rare (Gold)':11,'Secret Rare':1
 function rrank(g){var m=0;g.cards.forEach(function(c){m=Math.max(m,RANK[c.rarity]||0);});return m;}
 function yr(g){return parseInt(g.release_year,10)||0;}
 function sorted(list){
-  var s=val('caSort');if(!s)return list;
+  var s=_sort;if(!s)return list;
   return list.slice().sort(function(a,b){
-    var d=s==='Newest first'?yr(b)-yr(a):s==='Oldest first'?yr(a)-yr(b):s==='Rarity: highest first'?rrank(b)-rrank(a):rrank(a)-rrank(b);
+    var d=s==='new'?yr(b)-yr(a):s==='old'?yr(a)-yr(b):s==='rhi'?rrank(b)-rrank(a):s==='rlo'?rrank(a)-rrank(b)
+      :s==='own'?coll(b).pct-coll(a).pct:coll(a).pct-coll(b).pct;
     return d||a.group_name.localeCompare(b.group_name);
   });
 }
@@ -1427,7 +1430,8 @@ function filtered(){
     if(yr&&String(g.release_year)!==yr)return false;
     if(sz&&String(g.group_size)!==sz)return false;
     if(rar&&!g.cards.some(function(c){return c.rarity===rar;}))return false;
-    if(st){var k=coll(g);if(st==='Owned'&&k.missing)return false;if(st==='Still to get'&&!k.missing)return false;if(st==='In progress'&&(!k.owned||!k.missing))return false;if(st==='Not started'&&k.owned)return false;if(st==='Needs review'&&g.verification_status==='verified')return false;}
+    if(_show){var k0=coll(g);if(_show==='owned'&&k0.missing)return false;if(_show==='todo'&&!k0.missing)return false;}
+    if(st){var k=coll(g);if(st==='In progress'&&(!k.owned||!k.missing))return false;if(st==='Not started'&&k.owned)return false;if(st==='Needs review'&&g.verification_status==='verified')return false;}
     if(q){
       var hay=[g.group_name,g.set_name,g.set_code,g.artist,g.release_year,g.group_type,(g.pokemon_featured||[]).join(' ')].concat(g.cards.map(function(c){return c.card_name+' '+c.card_number+' '+c.set_name+' '+c.artist+' '+c.rarity;})).join(' ').toLowerCase();
       if(hay.indexOf(q)<0)return false;
@@ -1457,6 +1461,14 @@ window.caRender=function(){
   var V=[['gallery','🖼️ Gallery'],['largest','📏 Largest Collections'],['jp','🗾 Japanese Exclusive'],['en','🔤 English Exclusive'],['review','🔍 Needs Verification']];
   h+='<div class="ca-views">'+V.map(function(v){return '<button class="ca-vbtn'+(_view===v[0]?' on':'')+'" onclick="caView(\''+v[0]+'\')">'+v[1]+'</button>';}).join('')
     +'<button class="ca-vbtn" onclick="caExport()" style="margin-left:auto">⬇ Export JSON</button></div>';
+  // Sort / show chips sit right under the view buttons.
+  function chip(cur,v,l,fn){return '<button class="ca-chip'+(cur===v?' on':'')+'" onclick="'+fn+'(\''+v+'\')">'+l+'</button>';}
+  h+='<div class="ca-bar2"><span class="ca-lbl">Sort</span>'
+    +[['','Default'],['new','📅 Newest → oldest'],['old','📅 Oldest → newest'],['rhi','💎 Rarity: high → low'],['rlo','💎 Rarity: low → high'],['own','✅ Owned first'],['todo','⬜ Not owned first']]
+      .map(function(o){return chip(_sort,o[0],o[1],'caSortBy');}).join('')
+    +'</div><div class="ca-bar2"><span class="ca-lbl">Show</span>'
+    +[['','All'],['owned','✅ Owned'],['todo','⬜ Not owned']].map(function(o){return chip(_show,o[0],o[1],'caShow');}).join('')
+    +'</div>';
   var fh='<div class="ca-filters"><input id="caQ" placeholder="Search Pokémon, set, artist, card…" value="'+E(val('caQ'))+'" oninput="caRender()">'
     +opts('caEra','All eras',uniq(function(g){return g.era;}))
     +opts('caLay','All layouts',['horizontal','vertical','grid','panorama','legend','vunion','multi-panel'].filter(function(l){return _CA.some(function(g){return g.layout_type===l;});}))
@@ -1464,14 +1476,13 @@ window.caRender=function(){
     +opts('caYr','All years',uniq(function(g){return g.release_year;}).sort())
     +opts('caSz','Any size',uniq(function(g){return g.group_size;}).sort(function(a,b){return a-b;}))
     +opts('caRar','All rarities',uniq(function(g){return g.cards.map(function(c){return c.rarity;});}).sort())
-    +opts('caSt','Owned & not owned',['Owned','Still to get','In progress','Not started','Needs review'])
-    +opts('caSort','Default order',['Newest first','Oldest first','Rarity: highest first','Rarity: lowest first']);
+    +opts('caSt','Any status',['In progress','Not started','Needs review']);
   var list=sorted(filtered());
   fh+='<span class="ca-count">'+list.length+' of '+_CA.length+' groups</span></div>';
   var keep=document.activeElement&&document.activeElement.id==='caQ';
   if(_view==='gallery'){
     var recent=_CA.filter(function(g){return g.cards.every(function(c){return c.image_url;});}).sort(function(a,b){return(b.release_year+'').localeCompare(a.release_year+'');}).slice(0,4);
-    if(!val('caQ'))h+='<div class="ca-sec"><h2>Recently released groups</h2><div class="ca-grid">'+recent.map(tile).join('')+'</div></div>';
+    if(!val('caQ')&&!_sort&&!_show)h+='<div class="ca-sec"><h2>Recently released groups</h2><div class="ca-grid">'+recent.map(tile).join('')+'</div></div>';
     h+='<div class="ca-sec"><h2>All connected artworks</h2>'+fh+'<div class="ca-grid">'+list.map(tile).join('')+'</div></div>';
   }else if(_view==='largest'){
     h+='<div class="ca-sec"><h2>Largest Connected Artwork Collections</h2><p class="ca-sub">Every group ranked by the number of cards needed to complete the artwork.</p>'+fh
@@ -1491,6 +1502,8 @@ window.caRender=function(){
   if(keep){var q=document.getElementById('caQ');q.focus();q.setSelectionRange(q.value.length,q.value.length);}
 };
 window.caView=function(v){_view=v;caRender();};
+window.caSortBy=function(v){_sort=v;caRender();};
+window.caShow=function(v){_show=v;caRender();};
 
 function mapText(g){
   var rs=rows(g),cols=0;rs.forEach(function(r){cols=Math.max(cols,r.length);});
