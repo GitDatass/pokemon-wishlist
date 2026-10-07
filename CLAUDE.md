@@ -167,8 +167,9 @@ files as args to rebuild the JSON from scratch.)
   tile has a Mark owned / unmark button for the whole group. The builder keeps
   existing group ids stable so ticks survive rebuilds. Don't tie Connected Art
   to set or price edits.
-- Filters include Owned / Still to get; sort by newest/oldest year or
-  highest/lowest rarity (a group ranks by its rarest card — `RANK` in index.html).
+- Gallery has Sort chips (newest/oldest year, rarity high/low, owned / not owned
+  first) and Show chips (All / Owned / Not owned) under the view buttons; a group
+  ranks by its rarest card (`RANK` in index.html).
 - Missing images: Scrydex (`images.scrydex.com/pokemon/<id>/large|small`, e.g. `mep-52`,
   `m6_ja-53`, `tk8b-30`) when TCGdex lacks the card — check size isn't the card-back.
 - Value-to-complete uses `_EBAY_PRICES` (then English `_SELL_DATA`) prices.
