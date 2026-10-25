@@ -181,21 +181,21 @@ files as args to rebuild the JSON from scratch.)
 
 ## Energy Cards tab
 
-Every English + Japanese energy card (basic and special) with one row per print
-variant. **Source of truth is `energy-cards.json`**, built from TCGdex (cards,
+Every **English** energy card (basic and special) with one row per print
+variant. English only by user choice (2026-10-25): Japanese cards were removed, so
+don't re-add them. **Source of truth is `energy-cards.json`**, built from TCGdex (cards,
 sets, `variants_detailed` stamps/foils, Cardmarket €), pokemontcg.io (TCGplayer
 US$ market, extra images) and Scrydex art:
 
-    sh scripts/fetch-energy.sh <raw-dir>     # downloads everything (+ Scrydex JA probe)
+    sh scripts/fetch-energy.sh <raw-dir>     # downloads everything
     perl scripts/build-energy.pl <raw-dir>   # writes energy-cards.json + the `var _EN=` line
 
 - `_EN` is normalized: `types`, `eras`, `sets`, `products`, `tags`, `cards`,
   `images` (t=TCGdex / p=pokemontcg.io / s=Scrydex path), `variants`
   (card, label, product, tags), `market` (variant, amount, currency, source).
   Column names are in `_EN.schema`. The page builds type/set/era/card indexes at load.
-- Images: TCGdex first, then Scrydex for `sve`/`mee` and for JA cards
-  (`<set>_ja-<n>`, kept only if it isn't the card-back md5), then pokemontcg.io.
-  Trainer Kits, My First Battle and ~50 JA cards have no art anywhere (placeholder tile).
+- Images: TCGdex first, then Scrydex for `sve`/`mee` (checked: not the card-back),
+  then pokemontcg.io. Trainer Kits and My First Battle have no art anywhere (placeholder tile).
 - Market value is a **reference only** (TCGplayer US$, else Cardmarket € ranked at
   ≈1.08). It is NOT the eBay AU sold-median used for `_EBAY_PRICES`.
 - Owned / favourite / notes are per variant in localStorage `energy:v1`, keyed

@@ -2,7 +2,7 @@
 # Builds the Energy Cards tab data.
 #   sh scripts/fetch-energy.sh <raw-dir>      (downloads TCGdex + pokemontcg.io)
 #   perl scripts/build-energy.pl <raw-dir>
-# Merges every EN + JA energy card (basic and special) into normalized tables,
+# Merges every English energy card (basic and special) into normalized tables,
 # writes energy-cards.json and rewrites the single `var _EN=...;` line in
 # index.html. Each card is split into one row per print variant (reverse holo,
 # cosmos, league/staff stamps, Worlds decks, 1st edition, ...) from TCGdex's
@@ -20,10 +20,10 @@ sub nnum  { my $n = shift // ''; $n =~ s/^0+(?=\w)//; lc $n }
 
 # ── Lookup tables ─────────────────────────────────────────────
 my @TYPES = (
-  ['grass','Grass','#5cb85c','草'], ['fire','Fire','#e8562a','炎'], ['water','Water','#3b8fd9','水'],
-  ['lightning','Lightning','#f5c518','雷'], ['psychic','Psychic','#a05cc9','超'], ['fighting','Fighting','#c0703a','闘'],
-  ['darkness','Darkness','#4a5868','悪'], ['metal','Metal','#8a9aa6','鋼'], ['fairy','Fairy','#e889c0','フェアリー|妖'],
-  ['dragon','Dragon','#c9a227','ドラゴン'], ['colorless','Colorless','#c8c8c8','無色'], ['multi','Multi-type','#ff6fb5',''],
+  ['grass','Grass','#5cb85c'], ['fire','Fire','#e8562a'], ['water','Water','#3b8fd9'],
+  ['lightning','Lightning','#f5c518'], ['psychic','Psychic','#a05cc9'], ['fighting','Fighting','#c0703a'],
+  ['darkness','Darkness','#4a5868'], ['metal','Metal','#8a9aa6'], ['fairy','Fairy','#e889c0'],
+  ['dragon','Dragon','#c9a227'], ['colorless','Colorless','#c8c8c8'], ['multi','Multi-type','#ff6fb5'],
 );
 my %TIDX = map { $TYPES[$_][0] => $_ } 0 .. $#TYPES;
 
@@ -34,12 +34,6 @@ my %SERIE_ERA = (base=>0,gym=>0,neo=>0,lc=>0,PMCG=>0,VS=>0,ecard=>1,ex=>2,pop=>3
   hgss=>5,col=>5,HS=>5,bw=>6,BW=>6,xy=>7,XY=>7,sm=>8,SM=>8,swsh=>9,S=>9,sv=>10,SV=>10,me=>11,M=>11);
 my %TK_ERA = (EX=>2, DP=>4, HS=>5, BW=>6, XY=>7, SM=>8);
 
-# Japanese high-class / deck products (everything else in a numbered set is a booster pack)
-my %JA_PRODUCT = (SM12a=>'High-class pack',S8b=>'High-class pack',SM8b=>'High-class pack',S12a=>'High-class pack',
-  SV4a=>'High-class pack',SV8a=>'High-class pack',M2a=>'High-class pack',SM3p=>'Concept pack',SV2a=>'Enhanced expansion pack',
-  MC=>'Start Deck 100 Battle Collection',SVK=>'Deck Build Box',SM1M=>'Collection pack',SM1S=>'Collection pack');
-
-my %JA_ERA_BY_SET = (neo1=>0, neo4=>0, CP1=>7);
 my %PTCG_SET = (base6=>'lc', rsv10pt5=>'sv10.5w', zsv10pt5=>'sv10.5b', tk1a=>'tk-ex-latia', tk1b=>'tk-ex-latio',
   tk2a=>'tk-ex-p', tk2b=>'tk-ex-m', sm35=>'sm3.5');
 sub ptcg2dex {
@@ -66,7 +60,6 @@ sub product { my $p = shift; $prodIdx{$p} //= do { push @products, $p; $#product
 
 sub era_for {
   my ($lang, $set) = @_;
-  return $JA_ERA_BY_SET{$set->{id}} if $lang eq 'ja' && defined $JA_ERA_BY_SET{$set->{id}};
   my $s = $set->{serie}{id} // '';
   return $TK_ERA{$1} if $s eq 'tk' && ($set->{name} // '') =~ /^(EX|DP|HS|BW|XY|SM)/;
   $SERIE_ERA{$s} // do { warn "no era for $lang/$set->{id} ($s)\n"; 10 };
@@ -87,17 +80,15 @@ sub set_row {
 sub energy_type {
   my ($name, $effect, $basic) = @_;
   my $t = "$name";
-  return 'multi' if $t =~ /Blend|Unit Energy|Holon Energy|Rainbow|Prism|Multi Energy|Aurora|Luminous|Dark Metal|ユニット|レインボー|プリズム|オーロラ|ルミナス|ブレンド/;
-  return 'colorless' if $t =~ /Colorless|無色/;
+  return 'multi' if $t =~ /Blend|Unit Energy|Holon Energy|Rainbow|Prism|Multi Energy|Aurora|Luminous|Dark Metal/;
+  return 'colorless' if $t =~ /Colorless/;
   for my $T (@TYPES) {
     next if $T->[0] =~ /colorless|multi/;
-    my $en = $T->[1]; my $ja = $T->[3];
-    return $T->[0] if $t =~ /\b$en\b/ || ($T->[0] eq 'darkness' && $t =~ /\bDark\b/) || ($ja && $t =~ /$ja/);
+    my $en = $T->[1];
+    return $T->[0] if $t =~ /\b$en\b/ || ($T->[0] eq 'darkness' && $t =~ /\bDark\b/);
   }
-  return 'darkness' if $t =~ /闇/;
-  return 'metal' if $t =~ /金属/;
   my $e = $effect // '';
-  return 'multi' if $e =~ /every type|any type|all types|すべてのタイプ/i;
+  return 'multi' if $e =~ /every type|any type|all types/i;
   'colorless';
 }
 
@@ -125,7 +116,6 @@ sub tags_for {
   push @t, 'Promo' if $r =~ /Promo/i || $set->{id} =~ /-P$/;
   push @t, 'Jumbo' if ($v->{size} // '') eq 'jumbo';
   push @t, 'Trainer Kit' if $set->{serie} eq 'tk';
-  push @t, 'Regional exclusive' if $set->{lang} eq 'JA';
   push @t, 'Unique artwork' if $card->{basic} == 0;
   @t;
 }
@@ -161,8 +151,7 @@ sub base_product {
   return 'Energy insert (ETBs, decks, bundles)' if $set->{id} =~ /^(sve|mee)$/;
   return 'My First Battle' if $set->{id} eq 'mfb';
   return 'Promo' if $set->{id} =~ /-P$/ || ($card->{rarity} // '') =~ /Promo/;
-  return $JA_PRODUCT{$set->{id}} if $JA_PRODUCT{$set->{id}};
-  return 'Theme deck / product exclusive' if ($card->{rarity} // '') =~ /^None$/ && $set->{era} >= 6 && $set->{lang} eq 'EN';
+  return 'Theme deck / product exclusive' if ($card->{rarity} // '') =~ /^None$/ && $set->{era} >= 6;
   'Booster pack';
 }
 
@@ -197,8 +186,7 @@ sub eur_for {
 
 # ── Cards ─────────────────────────────────────────────────────
 my $SCRYDEX = qr/^(sve|mee)$/;   # TCGdex has no art for these; Scrydex does (checked: not the card-back)
-my %sxJA = -s "$raw/scrydex.txt" ? map { split ' ' } split /\n/, slurp("$raw/scrydex.txt") : ();
-for my $lang (qw(en ja)) {
+for my $lang (qw(en)) {   # English only (user choice, 2026-10-25)
   for my $f (sort glob "$raw/$lang/*.json") {
     my $c = jread($f) or next;
     next unless ($c->{category} // '') eq 'Energy';
@@ -206,9 +194,9 @@ for my $lang (qw(en ja)) {
     my $set = $sets[$si];
     my $basic = ($c->{energyType} // '') eq 'Normal' ? 1 : 0;
     # TCGdex flags some special energies (e.g. Shadowy Darkness Energy) as Normal: a basic must also have a plain basic name
-    my $plain = $c->{name} =~ /^(Basic )?(Grass|Fire|Water|Lightning|Psychic|Fighting|Darkness|Metal|Fairy) Energy$|^基本.+エネルギー$/;
+    my $plain = $c->{name} =~ /^(Basic )?(Grass|Fire|Water|Lightning|Psychic|Fighting|Darkness|Metal|Fairy) Energy$/;
     $basic = $plain ? ($basic || !$c->{energyType} ? 1 : 0) : 0;
-    my $pc = $lang eq 'en' ? $ptcg{"$set->{id}|" . nnum($c->{localId})} : undef;
+    my $pc = $ptcg{"$set->{id}|" . nnum($c->{localId})};
     $ptcgUsed{"$set->{id}|" . nnum($c->{localId})} = 1 if $pc;
     my $rar = $c->{rarity} // '';
     $rar = $pc->{rarity} if (!$rar || $rar =~ /^none$/i) && $pc && $pc->{rarity};
@@ -223,7 +211,6 @@ for my $lang (qw(en ja)) {
     # Images: TCGdex first (404s properly), then pokemontcg.io, then Scrydex for the energy-only sets
     if ($c->{image})                    { push @images, [$ci, 't', $c->{image} =~ s{^https://assets\.tcgdex\.net/}{}r] }
     elsif ($set->{id} =~ $SCRYDEX)      { push @images, [$ci, 's', "$set->{id}-" . nnum($c->{localId})] }
-    elsif ($lang eq 'ja' && $sxJA{$c->{id}}) { push @images, [$ci, 's', $sxJA{$c->{id}}] }
     elsif ($pc && $pc->{images})        { push @images, [$ci, 'p', $pc->{images}{large} =~ s{^https://images\.pokemontcg\.io/|_hires\.png$}{}gr] }
 
     my @vd = @{ $c->{variants_detailed} || [] };
