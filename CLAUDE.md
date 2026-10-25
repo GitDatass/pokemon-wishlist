@@ -1,12 +1,14 @@
 # Daniel's Pokémon Wishlist — Project Notes
 
 Single-file static site (`index.html`) hosted on GitHub Pages. No build step —
-all data and logic live inline in one `<script>` block. Two tabs:
+all data and logic live inline in one `<script>` block. Main tabs:
 
 - **Missing Cards** — browses `_SD` (wishlist data), checkbox "claimed" tracking
   via `localStorage`, optional price badge sourced from `_EBAY_PRICES`.
-- **Selling** — browses `_SELL_DATA` (cards for sale), always shows a price,
-  image sourced via the `sellImg()` function.
+- **Energy Cards** — see "Energy Cards tab" below. Replaced the **Selling** tab
+  on 2026-10-25. The Selling UI and `sellImg()` were removed, but `_SELL_DATA` is
+  kept: Connected Art value-to-complete and refresh-prices still read it. Notes
+  below that mention `sellImg`/the Selling tab are historical.
 
 ## Card image sourcing — known failure pattern
 
@@ -176,3 +178,29 @@ files as args to rebuild the JSON from scratch.)
 - `verification_status: "needs_review"` groups show in the "Needs Verification"
   view with `review_reason`. Primary reference: Bulbapedia "Combined
   illustration (TCG)". Exclude same-artist/same-theme/narrative-only pairs.
+
+## Energy Cards tab
+
+Every English + Japanese energy card (basic and special) with one row per print
+variant. **Source of truth is `energy-cards.json`**, built from TCGdex (cards,
+sets, `variants_detailed` stamps/foils, Cardmarket €), pokemontcg.io (TCGplayer
+US$ market, extra images) and Scrydex art:
+
+    sh scripts/fetch-energy.sh <raw-dir>     # downloads everything (+ Scrydex JA probe)
+    perl scripts/build-energy.pl <raw-dir>   # writes energy-cards.json + the `var _EN=` line
+
+- `_EN` is normalized: `types`, `eras`, `sets`, `products`, `tags`, `cards`,
+  `images` (t=TCGdex / p=pokemontcg.io / s=Scrydex path), `variants`
+  (card, label, product, tags), `market` (variant, amount, currency, source).
+  Column names are in `_EN.schema`. The page builds type/set/era/card indexes at load.
+- Images: TCGdex first, then Scrydex for `sve`/`mee` and for JA cards
+  (`<set>_ja-<n>`, kept only if it isn't the card-back md5), then pokemontcg.io.
+  Trainer Kits, My First Battle and ~50 JA cards have no art anywhere (placeholder tile).
+- Market value is a **reference only** (TCGplayer US$, else Cardmarket € ranked at
+  ≈1.08). It is NOT the eBay AU sold-median used for `_EBAY_PRICES`.
+- Owned / favourite / notes are per variant in localStorage `energy:v1`, keyed
+  `lang:set:number:variant` (stable across rebuilds). Not linked to `_SD` or Connected Art.
+- TCGdex marks some special energies as `Normal` (e.g. Shadowy Darkness Energy).
+  The builder only treats a card as basic if it also has a plain basic name.
+- No source catalogues Prize Pack, Pokémon Center, McDonald's or holiday-calendar
+  energies. The dashboard's "Energy styles covered" table shows these as gaps.
