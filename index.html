@@ -1152,7 +1152,7 @@ friend:'<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#4fc3f7" st
 quick:'<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#1e88e5" stroke="#222" stroke-width="1.5"/><path d="M1 10h18" stroke="#fff" stroke-width="2.5"/><circle cx="10" cy="10" r="3" fill="#fff" stroke="#222" stroke-width="1.2"/></svg>'
 };
 var VTYPE={'Poke Ball':['pokeball','#d32f2f'],'Love Ball':['love','#c2185b'],'Energy Symbol Pattern':['energy','#9a7b00','Energy pattern'],'Team Rocket':['rocket','#d84315'],'Dusk Ball':['dusk','#9a7b00'],'Friend Ball':['friend','#0277bd'],'Quick Ball':['quick','#1565c0']};
-function variantOf(name){var m=/(([^()]+))s*$/.exec(name||'');return m?m[1]:'';}
+function variantOf(name){var m=/[(]([^()]+)[)][ ]*$/.exec(name||'');return m?m[1]:'';}
 function variantHtml(v){
  var t=VTYPE[v];if(!t)return {big:'',bar:'',chip:''};
  var lab=t[2]||v;
