@@ -1129,7 +1129,7 @@ function renderSet(sb){
     var chk=claimed?'checked':'';
     html+='<div class="card'+clsClaimed+'" data-pid="'+pid+'" data-sn="'+escH(sn)+'" data-num="'+escH(num)+'">';
     var _ov=_SD_OVR[sn+'|'+num];var _td=SET_TCGDEX[sn];var _raw=num.indexOf('/')>-1?num.split('/')[0]:num;var _imgSrc=_ov?_ov:(_td?'https://assets.tcgdex.net/en/'+_td.p+'/'+_td.id+'/'+_raw.padStart(3,'0')+'/high.webp':(SET_TCGID[sn]?'https://images.pokemontcg.io/'+SET_TCGID[sn]+'/'+(_raw.replace(/^0+/,'')||'0')+'.png':''));
-    var vh=variantHtml(sn==='Ascended Heroes'?variantOf(c[2]):'');
+    var vh=variantHtml(sn==='Ascended Heroes'?variantOf(c[2]):'',num);
     html+='<div class="imgw"><img src="'+_imgSrc+'" onload="imgok(this)" onerror="tryImg(this)"><label class="ck"><input type="checkbox" onchange="clk(this)" '+chk+'></label>'+vh.big+vh.bar+'</div>';
     html+='<div class="info"><div class="num">#'+escH(num)+'</div><div class="name">'+name+'</div>'+vh.chip;
     html+=badge(rar,RC);
@@ -1152,11 +1152,27 @@ friend:'<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#4fc3f7" st
 quick:'<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#1e88e5" stroke="#222" stroke-width="1.5"/><path d="M1 10h18" stroke="#fff" stroke-width="2.5"/><circle cx="10" cy="10" r="3" fill="#fff" stroke="#222" stroke-width="1.2"/></svg>'
 };
 var VTYPE={'Poke Ball':['pokeball','#d32f2f'],'Love Ball':['love','#c2185b'],'Energy Symbol Pattern':['energy','#9a7b00','Energy pattern'],'Team Rocket':['rocket','#d84315'],'Dusk Ball':['dusk','#9a7b00'],'Friend Ball':['friend','#0277bd'],'Quick Ball':['quick','#1565c0']};
+var AH_ESP_TYPE={"007/217":"Grass","009/217":"Grass","016/217":"Grass","020/217":"Fire","050/217":"Water","052/217":"Water","024/217":"Fire","060/217":"Lightning","096/217":"Psychic","097/217":"Psychic","098/217":"Psychic","099/217":"Psychic","101/217":"Fighting","106/217":"Fighting","148/217":"Metal","150/217":"Dragon","088/217":"Psychic","085/217":"Psychic","053/217":"Water","078/217":"Psychic","034/217":"Fire","032/217":"Fire","115/217":"Fighting","095/217":"Psychic","069/217":"Lightning","092/217":"Psychic","163/217":"Colorless","141/217":"Darkness","063/217":"Lightning","108/217":"Fighting","064/217":"Lightning","143/217":"Darkness","175/217":"Colorless","124/217":"Darkness","132/217":"Darkness","127/217":"Darkness","178/217":"Colorless","147/217":"Metal","109/217":"Fighting","094/217":"Psychic"};
+var ETYPE_COL={Grass:'#2e7d32',Fire:'#bf360c',Water:'#1565c0',Lightning:'#8d6e00',Psychic:'#6a1b9a',Fighting:'#5d4037',Darkness:'#263238',Metal:'#546e7a',Dragon:'#b8860b',Fairy:'#ad1457',Colorless:'#616161'};
+var ETYPE_GLYPH={
+Grass:'<path d="M7 16 C7 9 12 6 17 6 C17 12 13 17 7 16 Z" fill="#fff"/><path d="M7 16 L12 11" stroke="#2e7d32" stroke-width="1.4"/>',
+Fire:'<path d="M12 5 C15 9 16 11 15 14 C14 17 9 18 8.5 14.5 C8 12 9.5 11 10 9 C11 10 11 11 11.5 11.5 C11.5 9 11 7 12 5 Z" fill="#fff"/>',
+Water:'<path d="M12 5 C15 9.5 17 12 17 14.5 A5 5 0 0 1 7 14.5 C7 12 9 9.5 12 5 Z" fill="#fff"/>',
+Lightning:'<path d="M13 4 L7 13 H11.5 L10.5 20 L17 10.5 H12.5 Z" fill="#5d4037"/>',
+Psychic:'<ellipse cx="12" cy="12" rx="7" ry="4.5" fill="#fff"/><circle cx="12" cy="12" r="2.2" fill="#6a1b9a"/>',
+Fighting:'<path d="M7 9 L12 5 L17 9 L15 17 H9 Z" fill="#fff"/><path d="M9 17 L12 20 L15 17" fill="#fff"/>',
+Darkness:'<path d="M14 6 A7 7 0 1 0 18 16 A5.5 5.5 0 0 1 14 6 Z" fill="#fff"/>',
+Metal:'<circle cx="12" cy="12" r="5" fill="none" stroke="#fff" stroke-width="2.4"/><circle cx="12" cy="12" r="1.6" fill="#fff"/>',
+Dragon:'<path d="M12 5 L13.8 10.2 L19 12 L13.8 13.8 L12 19 L10.2 13.8 L5 12 L10.2 10.2 Z" fill="#fff"/>',
+Fairy:'<path d="M12 17 L6.5 11.5 A3 3 0 0 1 12 8 A3 3 0 0 1 17.5 11.5 Z" fill="#fff"/>',
+Colorless:'<circle cx="12" cy="12" r="4" fill="#fff"/>'
+};
+function etypeIcon(t){return '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="'+ETYPE_COL[t]+'" stroke="#fff" stroke-width="1.5"/>'+ETYPE_GLYPH[t]+'</svg>';}
 function variantOf(name){var m=/[(]([^()]+)[)][ ]*$/.exec(name||'');return m?m[1]:'';}
-function variantHtml(v){
+function variantHtml(v,num){
  var t=VTYPE[v];if(!t)return {big:'',bar:'',chip:''};
- var lab=t[2]||v;
- return {big:'<div class="vbig">'+VICON[t[0]]+'</div>',bar:'<div class="vemb">'+VICON[t[0]]+'<span>'+escH(lab)+'</span></div>',chip:'<span class="vchip" style="color:'+t[1]+'">'+escH(lab)+'</span>'};
+ var lab=t[2]||v;var ic=VICON[t[0]];var col=t[1];if(v==='Energy Symbol Pattern'&&AH_ESP_TYPE[num]){var et=AH_ESP_TYPE[num];ic=etypeIcon(et);lab=et+' energy pattern';col=ETYPE_COL[et];}
+ return {big:'<div class="vbig">'+ic+'</div>',bar:'<div class="vemb">'+ic+'<span>'+escH(lab)+'</span></div>',chip:'<span class="vchip" style="color:'+col+'">'+escH(lab)+'</span>'};
 }
 function tog(sb){
   var wasOpen=sb.classList.contains('open');
